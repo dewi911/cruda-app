@@ -9,15 +9,22 @@ import (
 	"fmt"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
-	"log"
+	"os"
+
+	log "github.com/sirupsen/logrus"
 	"net/http"
-	"time"
 )
 
 const (
 	CONFIG_DIR  = "configs"
 	CONFIG_FILE = "main"
 )
+
+func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
+}
 
 func main() {
 	cfg, err := config.New(CONFIG_DIR, CONFIG_FILE)
@@ -58,7 +65,7 @@ func main() {
 		Handler: handler.InitRouter(),
 	}
 
-	log.Println("Listening on port 8080", time.Now().Format(time.RFC3339))
+	log.Info("Listening on port 8080")
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
