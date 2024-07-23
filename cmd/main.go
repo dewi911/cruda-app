@@ -18,7 +18,7 @@ func main() {
 		Username: "postgres",
 		DBName:   "postgres",
 		SSLMode:  "disable",
-		Password: "postgres",
+		Password: "qwerty123",
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -36,6 +36,7 @@ func main() {
 
 	log.Println("Listening on port 8080", time.Now().Format(time.RFC3339))
 
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatal(err)
 	}
 }
