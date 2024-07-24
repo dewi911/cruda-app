@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"cruda-app/internal/domain"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
@@ -24,13 +25,15 @@ type Users struct {
 	hasher PasswordHasher
 
 	hmaSecret []byte
+	tokenTtl  time.Duration
 }
 
-func NewUsers(repo UserRepository, hasher PasswordHasher, secret []byte) *Users {
+func NewUsers(repo UserRepository, hasher PasswordHasher, secret []byte, ttl time.Duration) *Users {
 	return &Users{
 		repo:      repo,
 		hasher:    hasher,
 		hmaSecret: secret,
+		tokenTtl:  ttl,
 	}
 }
 
@@ -58,13 +61,16 @@ func (s *Users) SingIn(ctx context.Context, inp domain.SingInInput) (string, err
 
 	user, err := s.repo.GetByCredential(ctx, inp.Email, password)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", domain.ErrUserNotFound
+		}
 		return "", err
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
 		Subject:   strconv.Itoa(int(user.ID)),
 		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		ExpiresAt: time.Now().Add(s.tokenTtl).Unix(),
 	})
 
 	return token.SignedString(s.hmaSecret)

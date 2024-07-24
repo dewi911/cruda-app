@@ -3,6 +3,7 @@ package rest
 import (
 	"cruda-app/internal/domain"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 )
@@ -61,7 +62,12 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 
 	token, err := h.usersService.SingIn(r.Context(), inp)
 	if err != nil {
-		logError("SingIn", "token singin", err)
+		if errors.Is(err, domain.ErrUserNotFound) {
+			handleNotFoundError(w, err)
+			return
+		}
+
+		logError("SingIn", "token sing-in", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -78,4 +84,14 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(response)
 
+}
+
+func handleNotFoundError(w http.ResponseWriter, err error) {
+	response, _ := json.Marshal(map[string]string{
+		"error": err.Error(),
+	})
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotFound)
+	w.Write(response)
 }
