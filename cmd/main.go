@@ -8,7 +8,6 @@ import (
 	"cruda-app/pkg/database"
 	"cruda-app/pkg/hash"
 	"fmt"
-	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 	"os"
 
@@ -33,16 +32,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var crftest = new(config.Config)
-
-	if err := envconfig.Process("db", &crftest.DB); err != nil {
-
-		log.Printf("Error processing DB_HOST: %v", err)
-
-	}
-	fmt.Printf("%+v\n", crftest.DB.Host)
-
-	log.Printf("config: %+v\n", crftest.DB)
+	//var crftest = new(config.Config)
+	log.Printf("config: %+v\n", cfg.DB)
 
 	db, err := database.NewPostgresConnection(database.ConnectionInfo{
 		Host:     cfg.DB.Host,

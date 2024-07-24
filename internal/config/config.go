@@ -24,10 +24,6 @@ type Postgres struct {
 
 func New(folder, filename string) (*Config, error) {
 	cfg := new(Config)
-	if err := envconfig.Process("DB", &cfg.DB); err != nil {
-		log.Printf("Error processing env variables: %v", err)
-		return nil, err
-	}
 
 	viper.AddConfigPath(folder)
 	viper.SetConfigName(filename)
@@ -42,6 +38,7 @@ func New(folder, filename string) (*Config, error) {
 
 	if err := envconfig.Process("DB", &cfg.DB); err != nil {
 		log.Printf("Error processing DB_HOST: %v", err)
+		return nil, err
 	}
 
 	return cfg, nil

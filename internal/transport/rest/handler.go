@@ -42,7 +42,7 @@ func (h *Handler) InitRouter() *mux.Router {
 	auth := r.PathPrefix("/auth").Subrouter()
 	{
 		auth.HandleFunc("/sing-up", h.SingUp).Methods(http.MethodPost)
-		auth.HandleFunc("sing-in", h.SingIn).Methods(http.MethodGet)
+		auth.HandleFunc("/sing-in", h.SingIn).Methods(http.MethodGet)
 	}
 
 	books := r.PathPrefix("/books").Subrouter()
