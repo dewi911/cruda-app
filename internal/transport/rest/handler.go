@@ -27,9 +27,10 @@ type Handler struct {
 	usersService User
 }
 
-func NewHandler(books Books) *Handler {
+func NewHandler(books Books, users User) *Handler {
 	return &Handler{
 		booksService: books,
+		usersService: users,
 	}
 }
 

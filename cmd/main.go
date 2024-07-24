@@ -6,6 +6,7 @@ import (
 	"cruda-app/internal/service"
 	"cruda-app/internal/transport/rest"
 	"cruda-app/pkg/database"
+	"cruda-app/pkg/hash"
 	"fmt"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
@@ -56,9 +57,16 @@ func main() {
 	}
 	defer db.Close()
 
+	//init deps
+	hasher := hash.NewSHA1Hasher("salt")
+
 	bookRepo := psql.NewBooks(db)
 	bookService := service.NewBooks(bookRepo)
-	handler := rest.NewHandler(bookService)
+
+	usersRepo := psql.NewUsers(db)
+	usersService := service.NewUsers(usersRepo, hasher)
+
+	handler := rest.NewHandler(bookService, usersService)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Server.Port),

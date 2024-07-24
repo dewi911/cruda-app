@@ -3,7 +3,12 @@ package service
 import (
 	"context"
 	"cruda-app/internal/domain"
+	"time"
 )
+
+type PasswordHasher interface {
+	Hash(password string) (string, error)
+}
 
 type UserRepository interface {
 	Create(ctx context.Context, user domain.User) error
@@ -11,19 +16,33 @@ type UserRepository interface {
 }
 
 type Users struct {
-	repo UserRepository
+	repo   UserRepository
+	hasher PasswordHasher
 }
 
-func NewUsers(repo UserRepository) *Users {
+func NewUsers(repo UserRepository, hasher PasswordHasher) *Users {
 	return &Users{
-		repo: repo,
+		repo:   repo,
+		hasher: hasher,
 	}
 }
 
-func SingUp(ctx context.Context, inp domain.SingUpInput) error {
-	return nil
+func (u *Users) SingUp(ctx context.Context, inp domain.SingUpInput) error {
+	password, err := u.hasher.Hash(inp.Password)
+	if err != nil {
+		return err
+	}
+
+	user := domain.User{
+		Name:         inp.Name,
+		Email:        inp.Email,
+		Password:     password,
+		RegisteredAt: time.Now(),
+	}
+
+	return u.repo.Create(ctx, user)
 }
 
-func SingIn(ctx context.Context, email, password string) (string, error) {
+func (u *Users) SingIn(ctx context.Context, email, password string) (string, error) {
 	return "", nil
 }
