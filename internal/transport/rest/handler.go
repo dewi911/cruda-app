@@ -19,7 +19,8 @@ type Books interface {
 
 type User interface {
 	SingUp(ctx context.Context, user domain.SingUpInput) error
-	SingIn(ctx context.Context, email, password string) (string, error)
+	SingIn(ctx context.Context, inp domain.SingInInput) (string, error)
+	ParseToken(ctx context.Context, token string) (int64, error)
 }
 
 type Handler struct {
@@ -46,6 +47,8 @@ func (h *Handler) InitRouter() *mux.Router {
 
 	books := r.PathPrefix("/books").Subrouter()
 	{
+		books.Use(h.authMiddleware)
+
 		books.HandleFunc("", h.createBook).Methods(http.MethodPost)
 		books.HandleFunc("", h.getAllBooks).Methods(http.MethodGet)
 		books.HandleFunc("/{id:[0-9]+}", h.getBookByID).Methods(http.MethodGet)

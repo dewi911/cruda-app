@@ -25,6 +25,15 @@ type SingUpInput struct {
 	Password string `json:"password" validate:"required,gte=6"`
 }
 
+type SingInInput struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,gte=6"`
+}
+
 func (i SingUpInput) Validate() error {
+	return validate.Struct(i)
+}
+
+func (i SingInInput) Validate() error {
 	return validate.Struct(i)
 }

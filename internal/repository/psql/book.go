@@ -14,16 +14,16 @@ type Books struct {
 
 func NewBooks(db *sql.DB) *Books { return &Books{db: db} }
 
-func (b *Books) Create(ctx context.Context, book domain.Book) error {
-	_, err := b.db.Exec("INSERT INTO books (title, author, publish_date, rating) values ($1, $2, $3, $4)",
+func (r *Books) Create(ctx context.Context, book domain.Book) error {
+	_, err := r.db.Exec("INSERT INTO books (title, author, publish_date, rating) values ($1, $2, $3, $4)",
 		book.Title, book.Author, book.PublishDate, book.Rating)
 
 	return err
 }
 
-func (b *Books) GetByID(ctx context.Context, id int64) (domain.Book, error) {
+func (r *Books) GetByID(ctx context.Context, id int64) (domain.Book, error) {
 	var book domain.Book
-	err := b.db.QueryRow("SELECT id, title, author, publish_date, rating  FROM books WHERE id = $1", id).
+	err := r.db.QueryRow("SELECT id, title, author, publish_date, rating  FROM books WHERE id = $1", id).
 		Scan(&book.ID, &book.Title, &book.Author, &book.PublishDate, &book.Rating)
 	if err == sql.ErrNoRows {
 		return book, domain.ErrBookNotFound
@@ -32,8 +32,8 @@ func (b *Books) GetByID(ctx context.Context, id int64) (domain.Book, error) {
 	return book, err
 }
 
-func (b *Books) GetAll(ctx context.Context) ([]domain.Book, error) {
-	rows, err := b.db.Query("SELECT id, title, author, publish_date, rating  FROM books")
+func (r *Books) GetAll(ctx context.Context) ([]domain.Book, error) {
+	rows, err := r.db.Query("SELECT id, title, author, publish_date, rating  FROM books")
 	if err != nil {
 		return nil, err
 	}
@@ -51,13 +51,13 @@ func (b *Books) GetAll(ctx context.Context) ([]domain.Book, error) {
 	return books, rows.Err()
 }
 
-func (b *Books) Delete(ctx context.Context, id int64) error {
-	_, err := b.db.Exec("DELETE FROM books WHERE id = $1", id)
+func (r *Books) Delete(ctx context.Context, id int64) error {
+	_, err := r.db.Exec("DELETE FROM books WHERE id = $1", id)
 
 	return err
 }
 
-func (b *Books) Update(ctx context.Context, id int64, inp domain.UpdateBookInput) error {
+func (r *Books) Update(ctx context.Context, id int64, inp domain.UpdateBookInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -91,6 +91,6 @@ func (b *Books) Update(ctx context.Context, id int64, inp domain.UpdateBookInput
 	query := fmt.Sprintf("UPDATE books SET %s WHERE id = $%d", setQuery, argId)
 	args = append(args, id)
 
-	_, err := b.db.Exec(query, args...)
+	_, err := r.db.Exec(query, args...)
 	return err
 }
