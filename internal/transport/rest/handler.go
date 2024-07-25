@@ -20,7 +20,8 @@ type Books interface {
 type User interface {
 	SingUp(ctx context.Context, user domain.SingUpInput) error
 	SingIn(ctx context.Context, inp domain.SingInInput) (string, string, error)
-	ParseToken(ctx context.Context, token string) (int64, error)
+	ParseToken(ctx context.Context, accessToken string) (int64, error)
+	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 }
 
 type Handler struct {
@@ -43,6 +44,7 @@ func (h *Handler) InitRouter() *mux.Router {
 	{
 		auth.HandleFunc("/sing-up", h.SingUp).Methods(http.MethodPost)
 		auth.HandleFunc("/sing-in", h.SingIn).Methods(http.MethodGet)
+		auth.HandleFunc("/refresh", h.refresh).Methods(http.MethodGet)
 	}
 
 	books := r.PathPrefix("/books").Subrouter()

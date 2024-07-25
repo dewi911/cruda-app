@@ -21,27 +21,27 @@ type UserRepository interface {
 	GetByCredential(ctx context.Context, email, password string) (domain.User, error)
 }
 
-type TokensRepository interface {
-	Create(ctx context.Context, user domain.RefreshToken) error
-	Get(ctx context.Context, token string) (domain.RefreshToken, error)
+type SessionsRepository interface {
+	Create(ctx context.Context, user domain.RefreshSession) error
+	Get(ctx context.Context, token string) (domain.RefreshSession, error)
 }
 
 type Users struct {
-	repo      UserRepository
-	tokenRepo TokensRepository
-	hasher    PasswordHasher
+	repo         UserRepository
+	sessionsRepo SessionsRepository
+	hasher       PasswordHasher
 
 	hmaSecret []byte
 	tokenTtl  time.Duration
 }
 
-func NewUsers(repo UserRepository, tokenRepo TokensRepository, hasher PasswordHasher, secret []byte, ttl time.Duration) *Users {
+func NewUsers(repo UserRepository, sessionsRepo SessionsRepository, hasher PasswordHasher, secret []byte, ttl time.Duration) *Users {
 	return &Users{
-		repo:      repo,
-		tokenRepo: tokenRepo,
-		hasher:    hasher,
-		hmaSecret: secret,
-		tokenTtl:  ttl,
+		repo:         repo,
+		sessionsRepo: sessionsRepo,
+		hasher:       hasher,
+		hmaSecret:    secret,
+		tokenTtl:     ttl,
 	}
 }
 
@@ -75,31 +75,8 @@ func (s *Users) SingIn(ctx context.Context, inp domain.SingInInput) (string, str
 		return "", "", err
 	}
 
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Subject:   strconv.Itoa(int(user.ID)),
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(s.tokenTtl).Unix(),
-	})
+	return s.generateTokens(ctx, user.ID)
 
-	accessToken, err := t.SignedString(s.hmaSecret)
-	if err != nil {
-		return "", "", err
-	}
-
-	refreshToken, err := newRefreshToken()
-	if err != nil {
-		return "", "", err
-	}
-
-	if err := s.tokenRepo.Create(ctx, domain.RefreshToken{
-		UserID:    user.ID,
-		Token:     refreshToken,
-		ExpiresAt: time.Now().Add(time.Hour * 24 * 30),
-	}); err != nil {
-		return "", "", err
-	}
-
-	return accessToken, refreshToken, nil
 }
 
 func (s *Users) ParseToken(ctx context.Context, tokenString string) (int64, error) {
@@ -136,6 +113,34 @@ func (s *Users) ParseToken(ctx context.Context, tokenString string) (int64, erro
 	return int64(id), nil
 }
 
+func (s *Users) generateTokens(ctx context.Context, userId int64) (string, string, error) {
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Subject:   strconv.Itoa(int(userId)),
+		IssuedAt:  time.Now().Unix(),
+		ExpiresAt: time.Now().Add(s.tokenTtl).Unix(),
+	})
+
+	accessToken, err := t.SignedString(s.hmaSecret)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err := newRefreshToken()
+	if err != nil {
+		return "", "", err
+	}
+
+	if err := s.sessionsRepo.Create(ctx, domain.RefreshSession{
+		UserID:    userId,
+		Token:     refreshToken,
+		ExpiresAt: time.Now().Add(time.Hour * 24 * 30),
+	}); err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
 func newRefreshToken() (string, error) {
 	b := make([]byte, 32)
 
@@ -147,4 +152,17 @@ func newRefreshToken() (string, error) {
 	}
 
 	return fmt.Sprintf("%x", b), nil
+}
+
+func (s *Users) RefreshTokens(ctx context.Context, refreshToken string) (string, string, error) {
+	session, err := s.sessionsRepo.Get(ctx, refreshToken)
+	if err != nil {
+		return "", "", err
+	}
+
+	if session.ExpiresAt.Unix() < time.Now().Unix() {
+		return "", "", domain.ErrRefreshTokenExpired
+	}
+
+	return s.generateTokens(ctx, session.UserID)
 }
