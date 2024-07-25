@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"math/rand"
 	"strconv"
 	"time"
 )
@@ -53,27 +54,37 @@ func (s *Users) SingUp(ctx context.Context, inp domain.SingUpInput) error {
 	return s.repo.Create(ctx, user)
 }
 
-func (s *Users) SingIn(ctx context.Context, inp domain.SingInInput) (string, error) {
+func (s *Users) SingIn(ctx context.Context, inp domain.SingInInput) (string, string, error) {
 	password, err := s.hasher.Hash(inp.Password)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	user, err := s.repo.GetByCredential(ctx, inp.Email, password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", domain.ErrUserNotFound
+			return "", "", domain.ErrUserNotFound
 		}
-		return "", err
+		return "", "", err
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
 		Subject:   strconv.Itoa(int(user.ID)),
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(s.tokenTtl).Unix(),
 	})
 
-	return token.SignedString(s.hmaSecret)
+	accessToken, err := t.SignedString(s.hmaSecret)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err := newRefreshToke()
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
 }
 
 func (s *Users) ParseToken(ctx context.Context, tokenString string) (int64, error) {
@@ -108,4 +119,17 @@ func (s *Users) ParseToken(ctx context.Context, tokenString string) (int64, erro
 	}
 
 	return int64(id), nil
+}
+
+func newRefreshToke() (string, error) {
+	b := make([]byte, 32)
+
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s)
+
+	if _, err := r.Read(b); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", b), nil
 }
