@@ -4,6 +4,7 @@ import (
 	"cruda-app/internal/domain"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -60,7 +61,7 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.usersService.SingIn(r.Context(), inp)
+	accessToken, refreshToken, err := h.usersService.SingIn(r.Context(), inp)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			handleNotFoundError(w, err)
@@ -73,7 +74,7 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, err := json.Marshal(map[string]string{
-		"token": token,
+		"token": accessToken,
 	})
 	if err != nil {
 		logError("SingIn", "marshalling response body", err)
@@ -81,6 +82,7 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Set-Cookie", fmt.Sprintf("refresh_token='%s';HttpOnly", refreshToken))
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(response)
 

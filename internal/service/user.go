@@ -38,6 +38,7 @@ type Users struct {
 func NewUsers(repo UserRepository, tokenRepo TokensRepository, hasher PasswordHasher, secret []byte, ttl time.Duration) *Users {
 	return &Users{
 		repo:      repo,
+		tokenRepo: tokenRepo,
 		hasher:    hasher,
 		hmaSecret: secret,
 		tokenTtl:  ttl,

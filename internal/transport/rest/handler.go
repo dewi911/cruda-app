@@ -19,7 +19,7 @@ type Books interface {
 
 type User interface {
 	SingUp(ctx context.Context, user domain.SingUpInput) error
-	SingIn(ctx context.Context, inp domain.SingInInput) (string, error)
+	SingIn(ctx context.Context, inp domain.SingInInput) (string, string, error)
 	ParseToken(ctx context.Context, token string) (int64, error)
 }
 
