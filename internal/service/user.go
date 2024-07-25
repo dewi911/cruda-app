@@ -21,15 +21,21 @@ type UserRepository interface {
 	GetByCredential(ctx context.Context, email, password string) (domain.User, error)
 }
 
+type TokensRepository interface {
+	Create(ctx context.Context, user domain.RefreshToken) error
+	Get(ctx context.Context, token string) (domain.RefreshToken, error)
+}
+
 type Users struct {
-	repo   UserRepository
-	hasher PasswordHasher
+	repo      UserRepository
+	tokenRepo TokensRepository
+	hasher    PasswordHasher
 
 	hmaSecret []byte
 	tokenTtl  time.Duration
 }
 
-func NewUsers(repo UserRepository, hasher PasswordHasher, secret []byte, ttl time.Duration) *Users {
+func NewUsers(repo UserRepository, tokenRepo TokensRepository, hasher PasswordHasher, secret []byte, ttl time.Duration) *Users {
 	return &Users{
 		repo:      repo,
 		hasher:    hasher,
@@ -79,7 +85,7 @@ func (s *Users) SingIn(ctx context.Context, inp domain.SingInInput) (string, str
 		return "", "", err
 	}
 
-	refreshToken, err := newRefreshToke()
+	refreshToken, err := newRefreshToken()
 	if err != nil {
 		return "", "", err
 	}
@@ -121,7 +127,7 @@ func (s *Users) ParseToken(ctx context.Context, tokenString string) (int64, erro
 	return int64(id), nil
 }
 
-func newRefreshToke() (string, error) {
+func newRefreshToken() (string, error) {
 	b := make([]byte, 32)
 
 	s := rand.NewSource(time.Now().Unix())
