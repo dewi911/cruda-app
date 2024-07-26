@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"cruda-app/internal/domain"
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/dewi911/cruda-app/internal/domain"
 	audit "github.com/dewi911/cruda-audit-log/pkg/domain"
 	"github.com/golang-jwt/jwt"
 	"github.com/sirupsen/logrus"

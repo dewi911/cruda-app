@@ -1,4 +1,4 @@
-module cruda-app
+module github.com/dewi911/cruda-app
 
 go 1.22
 

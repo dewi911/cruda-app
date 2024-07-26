@@ -2,8 +2,8 @@ package psql
 
 import (
 	"context"
-	"cruda-app/internal/domain"
 	"database/sql"
+	"github.com/dewi911/cruda-app/internal/domain"
 )
 
 type Users struct {
@@ -25,6 +25,6 @@ func (r *Users) GetByCredential(ctx context.Context, email, password string) (do
 	var user domain.User
 	err := r.db.QueryRow("SELECT id, name, email, registered_at FROM users WHERE email=$1 AND password=$2", email, password).
 		Scan(&user.ID, &user.Name, &user.Email, &user.RegisteredAt)
-	
+
 	return user, err
 }

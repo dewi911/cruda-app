@@ -1,14 +1,14 @@
 package main
 
 import (
-	"cruda-app/internal/config"
-	"cruda-app/internal/repository/psql"
-	"cruda-app/internal/service"
-	"cruda-app/internal/transport/grpc"
-	"cruda-app/internal/transport/rest"
-	"cruda-app/pkg/database"
-	"cruda-app/pkg/hash"
 	"fmt"
+	"github.com/dewi911/cruda-app/internal/config"
+	"github.com/dewi911/cruda-app/internal/repository/psql"
+	"github.com/dewi911/cruda-app/internal/service"
+	"github.com/dewi911/cruda-app/internal/transport/grpc"
+	"github.com/dewi911/cruda-app/internal/transport/rest"
+	"github.com/dewi911/cruda-app/pkg/database"
+	"github.com/dewi911/cruda-app/pkg/hash"
 	_ "github.com/lib/pq"
 	"os"
 

@@ -2,8 +2,8 @@ package rest
 
 import (
 	"context"
-	"cruda-app/internal/domain"
 	"errors"
+	"github.com/dewi911/cruda-app/internal/domain"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"

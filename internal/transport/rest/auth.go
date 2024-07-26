@@ -1,10 +1,10 @@
 package rest
 
 import (
-	"cruda-app/internal/domain"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/dewi911/cruda-app/internal/domain"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"

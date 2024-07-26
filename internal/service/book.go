@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"cruda-app/internal/domain"
+	"github.com/dewi911/cruda-app/internal/domain"
 	"time"
 )
 

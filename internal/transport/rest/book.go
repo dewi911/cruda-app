@@ -2,9 +2,9 @@ package rest
 
 import (
 	"context"
-	"cruda-app/internal/domain"
 	"encoding/json"
 	"errors"
+	"github.com/dewi911/cruda-app/internal/domain"
 	"io"
 	"net/http"
 )

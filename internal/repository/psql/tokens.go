@@ -2,8 +2,8 @@ package psql
 
 import (
 	"context"
-	"cruda-app/internal/domain"
 	"database/sql"
+	"github.com/dewi911/cruda-app/internal/domain"
 )
 
 type Tokens struct {

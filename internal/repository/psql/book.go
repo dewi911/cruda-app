@@ -2,9 +2,9 @@ package psql
 
 import (
 	"context"
-	"cruda-app/internal/domain"
 	"database/sql"
 	"fmt"
+	"github.com/dewi911/cruda-app/internal/domain"
 	"strings"
 )
 
