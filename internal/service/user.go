@@ -6,7 +6,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	audit "github.com/dewi911/cruda-audit-log/pkg/domain"
 	"github.com/golang-jwt/jwt"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	"strconv"
 	"time"
@@ -26,20 +28,27 @@ type SessionsRepository interface {
 	Get(ctx context.Context, token string) (domain.RefreshSession, error)
 }
 
+type AuditClient interface {
+	SendLogRequest(ctx context.Context, req audit.LogItem) error
+}
+
 type Users struct {
 	repo         UserRepository
 	sessionsRepo SessionsRepository
 	hasher       PasswordHasher
 
+	auditClient AuditClient
+
 	hmaSecret []byte
 	tokenTtl  time.Duration
 }
 
-func NewUsers(repo UserRepository, sessionsRepo SessionsRepository, hasher PasswordHasher, secret []byte, ttl time.Duration) *Users {
+func NewUsers(repo UserRepository, sessionsRepo SessionsRepository, auditClient AuditClient, hasher PasswordHasher, secret []byte, ttl time.Duration) *Users {
 	return &Users{
 		repo:         repo,
 		sessionsRepo: sessionsRepo,
 		hasher:       hasher,
+		auditClient:  auditClient,
 		hmaSecret:    secret,
 		tokenTtl:     ttl,
 	}
@@ -58,7 +67,27 @@ func (s *Users) SingUp(ctx context.Context, inp domain.SingUpInput) error {
 		RegisteredAt: time.Now(),
 	}
 
-	return s.repo.Create(ctx, user)
+	if err := s.repo.Create(ctx, user); err != nil {
+		return err
+	}
+
+	user, err = s.repo.GetByCredential(ctx, inp.Email, password)
+	if err != nil {
+		return err
+	}
+
+	if err := s.auditClient.SendLogRequest(ctx, audit.LogItem{
+		Action:    audit.ACTION_REGISTER,
+		Entity:    audit.ENTITY_USER,
+		EntityID:  user.ID,
+		Timestamp: time.Now(),
+	}); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"method": "Users.SingUp",
+		}).Error("Failed to register user", err)
+	}
+
+	return nil
 }
 
 func (s *Users) SingIn(ctx context.Context, inp domain.SingInInput) (string, string, error) {

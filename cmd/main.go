@@ -4,6 +4,7 @@ import (
 	"cruda-app/internal/config"
 	"cruda-app/internal/repository/psql"
 	"cruda-app/internal/service"
+	"cruda-app/internal/transport/grpc"
 	"cruda-app/internal/transport/rest"
 	"cruda-app/pkg/database"
 	"cruda-app/pkg/hash"
@@ -56,7 +57,13 @@ func main() {
 
 	usersRepo := psql.NewUsers(db)
 	tokensRepo := psql.NewTokens(db)
-	usersService := service.NewUsers(usersRepo, tokensRepo, hasher, []byte("sample secret key"), cfg.Auth.TokenTTL)
+
+	auditClient, err := grpc.NewClient(9000)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	usersService := service.NewUsers(usersRepo, tokensRepo, auditClient, hasher, []byte("sample secret key"), cfg.Auth.TokenTTL)
 
 	handler := rest.NewHandler(bookService, usersService)
 

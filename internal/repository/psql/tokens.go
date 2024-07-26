@@ -33,6 +33,7 @@ func (r *Tokens) Get(ctx context.Context, token string) (domain.RefreshSession, 
 	if err != nil {
 		return t, err
 	}
+
 	return t, err
 }
 
