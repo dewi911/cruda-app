@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS books (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    publish_date TIMESTAMP NOT NULL,
+    rating INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL UNIQUE PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    registered_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id),
+    token VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP DEFAULT NOW()
+);
